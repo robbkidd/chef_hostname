@@ -1,15 +1,16 @@
 # chef_hostname Cookbook
 
-Sets the hostname from within a recipe.  Supports FQDNs in the hostname.  Does not require lazy attributes in templates and 
-file resources.
+Sets the hostname from within a recipe.  Supports FQDNs in the hostname.  Does not require lazy attributes in templates and
+file resources.  Updates the appropriate distro-specific files in order to persist the hostname across reboots
 
 ## Requirements
 
 ## Platforms
-- Ubuntu/Debian
-- RHEL/CentOS/Scientific/Oracle/Fedora
+- Ubuntu/Debian/Mint/Raspbian
+- RHEL/CentOS/Scientific/Oracle/Fedora/Pidora
 - OpenSUSE/SLES
 - FreeBSD/OpenBSD/NetBSD
+- Windows
 
 TODO:
 - arch
@@ -17,7 +18,6 @@ TODO:
 - solaris
 - aix
 - nexus
-- windows
 
 ### Chef
 - Chef 12.1+

@@ -7,7 +7,7 @@
 hostname "foobar.example.com"
 
 file "/tmp/hostname-testing1" do
-  content node['machinename']
+  content node["machinename"]
 end
 
 file "/tmp/hostname-testing2" do
