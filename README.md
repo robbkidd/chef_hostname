@@ -26,6 +26,7 @@ Sets the node's hostname
 - OpenSUSE/SLES
 - FreeBSD/OpenBSD/NetBSD
 - Docker Containers
+- MacOSX
 - Windows <-- currently a bit of a lie
 
 ### Chef
@@ -125,7 +126,6 @@ Docker container hostnames do not persist after restarts due to limitations of d
 
 ## TODO
 - fix setting node['fqdn'] correctly on windows
-- mac
 - solaris
 - aix
 - nexus
