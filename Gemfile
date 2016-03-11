@@ -3,6 +3,7 @@ source "https://rubygems.org"
 group :rake do
   gem "rake"
   gem "tomlrb"
+  gem "stove"
 end
 
 group :lint do
