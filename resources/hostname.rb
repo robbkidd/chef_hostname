@@ -55,25 +55,62 @@ action :set do
 
     # setup the hostname to perist on a reboot
     case
-    when node["os"] == "linux" && ::File.exist?("/usr/bin/hostnamectl") && !docker_guest?
-      # use hostnamectl whenever we find it on linux (as systemd takes over the world)
-      execute "hostnamectl set-hostname #{new_resource.hostname}" do
+    when ::File.exist?("/usr/sbin/scutil")
+      # darwin
+      execute "set HostName via scutil" do
+        command "/usr/sbin/scutil --set HostName #{new_resource.hostname}"
+        not_if { shell_out!("/usr/sbin/scutil --get HostName").stdout.chomp == new_resource.hostname }
         notifies :reload, "ohai[reload hostname]"
-        not_if { shell_out!("hostnamectl status").stdout =~ /Static hostname:\s+#{new_resource.hostname}/ }
       end
-    when node["os"] == "linux" && ::File.exist?("/etc/hostname")
-      # debian family uses /etc/hostname
-      # this is also fallback for any linux systemd host in a docker container
-      file "/etc/hostname" do
-        atomic_update false
-        content "#{new_resource.hostname}\n"
-        owner "root"
-        group node["root_group"]
-        mode "0644"
+      execute "set ComputerName via scutil" do
+        command "/usr/sbin/scutil --set ComputerName  #{new_resource.hostname}"
+        not_if { shell_out!("/usr/sbin/scutil --get ComputerName").stdout.chomp == new_resource.hostname }
+        notifies :reload, "ohai[reload hostname]"
       end
-    when %w{rhel fedora}.include?(node["platform_family"])
-      append_replacing_matching_lines("/etc/sysconfig/network", /^HOSTNAME\s+=/, "HOSTNAME=#{new_resource.hostname}")
+      shortname = new_resource.hostname[/[^\.]*/]
+      execute "set LocalHostName via scutil" do
+        command "/usr/sbin/scutil --set LocalHostName #{shortname}"
+        not_if { shell_out!("/usr/sbin/scutil --get LocalHostName").stdout.chomp == shortname }
+        notifies :reload, "ohai[reload hostname]"
+      end
+    when node[:os] == "linux"
+      case
+      when ::File.exist?("/usr/bin/hostnamectl") && !docker_guest?
+        # use hostnamectl whenever we find it on linux (as systemd takes over the world)
+        # this must come before other methods like /etc/hostname and /etc/sysconfig/network
+        execute "hostnamectl set-hostname #{new_resource.hostname}" do
+          notifies :reload, "ohai[reload hostname]"
+          not_if { shell_out!("hostnamectl status").stdout =~ /Static hostname:\s+#{new_resource.hostname}/ }
+        end
+      when ::File.exist?("/etc/hostname")
+        # debian family uses /etc/hostname
+        # this is also fallback for any linux systemd host in a docker container
+        file "/etc/hostname" do
+          atomic_update false
+          content "#{new_resource.hostname}\n"
+          owner "root"
+          group node["root_group"]
+          mode "0644"
+        end
+      when ::File.exist?("/etc/sysconfig/network")
+        # older non-systemd RHEL/Fedora derived
+        append_replacing_matching_lines("/etc/sysconfig/network", /^HOSTNAME\s+=/, "HOSTNAME=#{new_resource.hostname}")
+      when ::File.exist?("/etc/HOSTNAME")
+        # SuSE/OpenSUSE uses /etc/HOSTNAME
+        file "/etc/HOSTNAME" do
+          content "#{new_resource.hostname}\n"
+          owner "root"
+          group node["root_group"]
+          mode "0644"
+        end
+      else
+        # This is a failsafe for all other linux distributions where we set the hostname
+        # via /etc/sysctl.conf on reboot.  This may get into a fight with other cookbooks
+        # that manage sysctls on linux.
+        append_replacing_matching_lines("/etc/sysctl.conf", /^\s+kernel\.hostname\s+=/, "kernel.hostname=#{new_resource.hostname}")
+      end
     when %w{freebsd openbsd netbsd}.include?(node["platform_family"])
+      # *BSD systems with /etc/rc.conf + /etc/myname
       append_replacing_matching_lines("/etc/rc.conf", /^\s+hostname\s+=/, "hostname=#{new_resource.hostname}")
 
       file "/etc/myname" do
@@ -82,19 +119,6 @@ action :set do
         group node["root_group"]
         mode "0644"
       end
-    when node["platform_family"] == "suse"
-      # SuSE/OpenSUSE uses /etc/HOSTNAME
-      file "/etc/HOSTNAME" do
-        content "#{new_resource.hostname}\n"
-        owner "root"
-        group node["root_group"]
-        mode "0644"
-      end
-    when node["os"] == "linux"
-      # This is a failsafe for all other linux distributions where we set the hostname
-      # via /etc/sysctl.conf on reboot.  This may get into a fight with other cookbooks
-      # that manage sysctls on linux.
-      append_replacing_matching_lines("/etc/sysctl.conf", /^\s+kernel\.hostname\s+=/, "kernel.hostname=#{new_resource.hostname}")
     else
       raise "Do not know how to set hostname on os #{node["os"]}, platform #{node["platform"]},"\
         "platform_version #{node["platform_version"]}, platform_family #{node["platform_family"]}"
