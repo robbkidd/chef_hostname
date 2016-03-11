@@ -11,6 +11,11 @@ Sets the node's hostname
 * runs nearly everywhere
 * supports hostnamectl from systemd
 
+## Motivation
+
+* Make strong guarantees that `node["fqdn"]` in other recipes "just works" without having to edit them to use `lazy { node["fqdn"] }`
+* Be very portable
+
 ## Requirements
 
 ## Platforms
