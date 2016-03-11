@@ -1,7 +1,15 @@
 # chef_hostname Cookbook
 
-Sets the hostname from within a recipe.  Supports FQDNs in the hostname.  Does not require lazy attributes in templates and
-file resources.  Updates the appropriate distro-specific files in order to persist the hostname across reboots
+Sets the node's hostname
+
+* resource-driven cookbook
+* supports FQDNs as hostnames
+* persists after a reboot
+* reloads ohai
+* runs at compile-time (no need to use lazy)
+* fixes up /etc/hosts so node["fqdn"] works
+* runs nearly everywhere
+* supports hostnamectl from systemd
 
 ## Requirements
 
@@ -11,13 +19,6 @@ file resources.  Updates the appropriate distro-specific files in order to persi
 - OpenSUSE/SLES
 - FreeBSD/OpenBSD/NetBSD
 - Windows
-
-TODO:
-- arch
-- gentoo
-- solaris
-- aix
-- nexus
 
 ### Chef
 - Chef 12.1+
@@ -59,7 +60,7 @@ Setting hostname to whatever attribute you like:
 hostname node['set_fqdn']
 ```
 
-There is no need to `lazy` arguments to templates and filenames when this is used since it forces itself to run at compile-time.
+There is no need to "lazy" arguments to templates and filenames when this is used since it forces itself to run at compile-time.
 
 ```ruby
 hostname node.name
@@ -80,33 +81,46 @@ file "/etc/issue" do
 end
 ```
 
-This cookbook does not set /etc/hosts entries, you can add `depends "hostfile"` to your metadata.rb and easily do that in your own recipe code (or you can roll your
-own /etc/hosts template):
+The hostname resource will drop a line into /etc/hosts so that the `node["fqdn"]` can be resolved correctly, and will re-trigger ohai.  The default is
+to use the node["ipaddress"]` value for the ipaddress on the /etc/hosts line.  In order to override it:
+
+```ruby
+hostname node["cloud"]["public_hostname"]
+  ipaddress node["cloud"]["public_ipv4"]
+end
+```
+
+In order to override the editing of the /etc/hosts file pass nil for the ipaddress (note that if you edit the /etc/hosts file you will be responsible
+for also reloading the ohai plugin and you will want to do both at compile-time yourself in order for `node["fqdn"]` to resolve)
 
 ```ruby
 hostname node.name
-
-hostsfile_entry "localhost" do
-  ip_address "127.0.0.1"
-  hostname "localhost.localdomain"
-  aliases [ "localhost" ]
-  unique true
-  action :create
+  ipaddress nil
 end
+```
 
-hostsfile_entry 'set hostname' do
-  ip_address node['ipaddress']
-  hostname node['fqdn']
-  aliases [ node['machinename'], node['hostname'] ]
-  unique true
-  action :create
+Aliases can also be added to the line that hostanme adds to /etc/hosts:
+
+```ruby
+hostname node.name
+  ipaddress "259.1.1.1"
+  aliases [ "klowns.car.local", "britney" ]
 end
 ```
 
 ## Notes
 
-There are no recipes in this cookbook, the resource is meant to be used in your own custom recipes.  There are not attributes in this cookbook,
-you can drive the resource off of whatever attribute you like.
+There are no recipes in this cookbook, the resource is meant to be used in your own custom recipes.  There are no attributes in this cookbook,
+you can drive the resource off of whatever attribute(s) you like.
+
+## TODO
+- fix setting node['fqdn'] correctly on windows
+- mac
+- solaris
+- aix
+- nexus
+- arch
+- gentoo
 
 ## License & Authors
 

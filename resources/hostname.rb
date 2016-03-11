@@ -3,8 +3,26 @@ resource_name :hostname
 
 property :hostname, String, name_property: true
 property :compile_time, [ true, false ], default: true
+property :ipaddress, [ String, nil ], default: node["ipaddress"]
+property :aliases, [ Array, nil ], default: nil
+property :reboot, [ true, false ], default: true
 
 default_action :set
+
+action_class do
+  def append_replacing_matching_lines(path, regex, string)
+    text = IO.read(path).split("\n")
+    text.reject! { |s| s =~ regex }
+    text += [ string ]
+    file path do
+      content text.join("\n") + "\n"
+      owner "root"
+      group node["root_group"]
+      mode "0644"
+      not_if { IO.read(path).split("\n").include?(string) }
+    end
+  end
+end
 
 action :set do
   ohai "reload hostname" do
@@ -12,30 +30,34 @@ action :set do
   end
 
   if node["platform_family"] != "windows"
+    # set the hostname via /bin/hostname
     execute "set hostname to #{new_resource.hostname}" do
       command "/bin/hostname #{new_resource.hostname}"
       not_if { shell_out!("hostname").stdout.chomp == name }
       notifies :reload, "ohai[reload hostname]", :immediately
     end
 
-    case node["platform_family"]
-    when "rhel", "fedora"
-      hostfile = "/etc/sysconfig/network"
-      file hostfile do
-        content IO.read(hostfile).gsub(/^HOSTNAME=.*$/, "HOSTNAME=#{new_resource.hostname}")
+    # make sure node['fqdn'] resolves via /etc/hosts
+    unless new_resource.ipaddress.nil?
+      newline = "#{new_resource.ipaddress} #{new_resource.hostname}"
+      newline << " #{new_resource.aliases.join(" ")}" if new_resource.aliases && !new_resource.aliases.empty?
+      newline << " #{new_resource.hostname[/[^\.]*/]}"
+      r = append_replacing_matching_lines("/etc/hosts", /^#{new_resource.ipaddress}\s+|\s+#{new_resource.hostname}\s+/, newline)
+      r.notifies :reload, "ohai[reload hostname]", :immediately
+    end
+
+    # setup the hostname to perist on a reboot
+    case
+    #when [ "rhel", "fedora" ].include?(node["platform_family"]) && ::File.exist?("/usr/bin/hostnamectl")
+    when node["os"] == "linux" && ::File.exist?("/usr/bin/hostnamectl")
+      # use hostnamectl whenever we find it on linux (as systemd takes over the world)
+      execute "hostnamectl set-hostname #{new_resource.hostname}" do
+        notifies :reload, "ohai[reload hostname]", :immediately
       end
-    when "freebsd", "openbsd", "netbsd"
-      rc_file = "/etc/rc.conf"
-      rc_file_txt = IO.read(rc_file).split("\n")
-      rc_file_txt.reject! { |s| s =~ /^\s+hostname\s+=/ }
-      rc_file_txt += [ "hostname=#{new_resource.hostname}" ]
-      file rc_file do
-        content rc_file_txt.join("\n")
-        owner "root"
-        group node["root_group"]
-        mode "0644"
-        not_if { IO.read(rc_file) =~ /^hostname=#{new_resource.hostname}$/ }
-      end
+    when %w{rhel fedora}.include?(node["platform_family"])
+      append_replacing_matching_lines("/etc/sysconfig/network", /^HOSTNAME\s+=/, "HOSTNAME=#{new_resource.hostname}")
+    when %w{freebsd openbsd netbsd}.include?(node["platform_family"])
+      append_replacing_matching_lines("/etc/rc.conf", /^\s+hostname\s+=/, "hostname=#{new_resource.hostname}")
 
       file "/etc/myname" do
         content "#{new_resource.hostname}\n"
@@ -43,7 +65,7 @@ action :set do
         group node["root_group"]
         mode "0644"
       end
-    when "debian"
+    when node["platform_family"] == "ubuntu"
       # Debian/Ubuntu/Mint/etc use /etc/hostname
       file "/etc/hostname" do
         content "#{new_resource.hostname}\n"
@@ -51,7 +73,7 @@ action :set do
         group node["root_group"]
         mode "0644"
       end
-    when "suse"
+    when node["platform_family"] == "suse"
       # SuSE/OpenSUSE uses /etc/HOSTNAME
       file "/etc/HOSTNAME" do
         content "#{new_resource.hostname}\n"
@@ -59,25 +81,14 @@ action :set do
         group node["root_group"]
         mode "0644"
       end
+    when node["os"] == "linux"
+      # This is a failsafe for all other linux distributions where we set the hostname
+      # via /etc/sysctl.conf on reboot.  This may get into a fight with other cookbooks
+      # that manage sysctls on linux.
+      append_replacing_matching_lines("/etc/sysctl.conf", /^\s+kernel\.hostname\s+=/, "kernel.hostname=#{new_resource.hostname}")
     else
-      if node["os"] == "linux"
-        # This is a failsafe for all other linux distributions where we set the hostname
-        # via /etc/sysctl.conf on reboot.  This may get into a fight with other cookbooks
-        # that manage sysctls on linux.
-
-        sysctl = "/etc/sysctl.conf"
-        file sysctl do
-          owner "root"
-          group node["root_group"]
-          mode "0644"
-          content IO.read(sysctl) + "kernel.hostname=#{new_resource.hostname}\n"
-          not_if { IO.read(sysctl) =~ /^kernel\.hostname=#{new_resource.hostname}$/ }
-        end
-      else
-        raise "Do not know how to set hostname on os #{node[:os]}, platform #{node[:platform]},"\
-              "platform_version #{node[:platform_version]}, platoform_family #{node[:platform_family]}"
-
-      end
+      raise "Do not know how to set hostname on os #{node["os"]}, platform #{node["platform"]},"\
+        "platform_version #{node["platform_version"]}, platform_family #{node["platform_family"]}"
     end
 
   else # windows
@@ -97,13 +108,14 @@ action :set do
           netdom computername #{Socket.gethostname} /remove:#{Socket.gethostname}
           netdom computername #{Socket.gethostname} /remove:#{Socket.gethostbyname(Socket.gethostname).first}
       EOH
-      not_if { Socket.gethostbyname(Socket.gethostname).first == "#{new_resource.hostname}" }
+      not_if { Socket.gethostbyname(Socket.gethostname).first == new_resource.hostname }
     end
 
     # reboot because $windows
     reboot "setting hostname" do
       reason "chef setting hostname"
       action :reboot_now
+      only_if { new_resource.reboot }
     end
   end
 end

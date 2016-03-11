@@ -1,11 +1,13 @@
-name "chef_hostname"
-maintainer "The Authors"
-maintainer_email "you@example.com"
-license "all_rights"
-description "Installs/Configures chef_hostname"
-long_description "Installs/Configures chef_hostname"
-version "0.1.0"
+name             "chef_hostname"
+maintainer       "Chef Software, Inc."
+maintainer_email "cookbooks@chef.io"
+license          "Apache 2.0"
+description      "Configures the hostname on a node"
+long_description IO.read(File.join(File.dirname(__FILE__), "README.md"))
+version          "0.1.0"
+source_url       "https://github.com/chef-cookbooks/chef-cookbooks" if respond_to?(:source_url)
+issues_url       "https://github.com/chef-cookbooks/chef-cookbooks/issues" if respond_to?(:issues_url)
 
 depends "compat_resource"
 
-#chef_version "~> 12.1"
+chef_version "~> 12.1" if respond_to?(:chef_version)
