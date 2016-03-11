@@ -10,7 +10,7 @@ Sets the node's hostname
 * fixes up /etc/hosts so node["fqdn"] works
 * runs nearly everywhere
 * supports hostnamectl from systemd
-* no other cookbook dependencies
+* not tied to any other sysctl/etc-hosts cookbook dependecies
 
 ## Motivation
 
