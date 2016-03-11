@@ -3,8 +3,14 @@ require "chefstyle"
 require "rubocop/rake_task"
 require "foodcritic"
 require "kitchen"
+require 'github_changelog_generator/task'
 
 require_relative "tasks/maintainers"
+
+GitHubChangelogGenerator::RakeTask.new :changelog do |config|
+  config.issues = false
+  config.exclude_labels = %w{duplicate question invalid wontfix changelog_skip}
+end
 
 # Style tests. Rubocop and Foodcritic
 namespace :style do
