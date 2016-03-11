@@ -20,8 +20,8 @@ Sets the node's hostname
 ## Requirements
 
 ## Platforms
-- Ubuntu/Debian/Mint/Raspbian
-- RHEL/CentOS/Scientific/Oracle/Fedora/Pidora
+- Ubuntu/Debian (and derivatives like Mint/Raspbian)
+- RHEL/CentOS/Scientific/Oracle/Fedora (and derivatives like Pidora)
 - OpenSUSE/SLES
 - FreeBSD/OpenBSD/NetBSD
 - Docker Containers
