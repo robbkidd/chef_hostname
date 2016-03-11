@@ -10,6 +10,7 @@ Sets the node's hostname
 * fixes up /etc/hosts so node["fqdn"] works
 * runs nearly everywhere
 * supports hostnamectl from systemd
+* no other cookbook dependencies
 
 ## Motivation
 
@@ -119,6 +120,8 @@ end
 
 There are no recipes in this cookbook, the resource is meant to be used in your own custom recipes.  There are no attributes in this cookbook,
 you can drive the resource off of whatever attribute(s) you like.
+
+Docker container hostnames do not persist after restarts due to limitations of docker.
 
 ## TODO
 - fix setting node['fqdn'] correctly on windows
