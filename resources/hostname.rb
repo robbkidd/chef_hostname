@@ -65,7 +65,7 @@ action :set do
         group node["root_group"]
         mode "0644"
       end
-    when node["platform_family"] == "ubuntu"
+    when node["platform_family"] == "debian"
       # Debian/Ubuntu/Mint/etc use /etc/hostname
       file "/etc/hostname" do
         content "#{new_resource.hostname}\n"
