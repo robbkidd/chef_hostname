@@ -5,7 +5,7 @@ property :hostname, String, name_property: true
 property :compile_time, [ true, false ], default: true
 property :ipaddress, [ String, nil ], default: node["ipaddress"]
 property :aliases, [ Array, nil ], default: nil
-property :reboot, [ true, false ], default: true
+property :windows_reboot, [ true, false ], default: true
 
 default_action :set
 
@@ -106,16 +106,14 @@ action :set do
     ec2_config_xml = 'C:\Program Files\Amazon\Ec2ConfigService\Settings\config.xml'
     cookbook_file ec2_config_xml do
       source "config.xml"
-      only_if { File.exist? ec2_config_xml }
+      only_if { ::File.exist? ec2_config_xml }
     end
 
     # update via netdom
-    windows_batch "set hostname" do
+    powershell_script "set hostname" do
       code <<-EOH
-          netdom computername #{Socket.gethostname} /add:#{new_resource.hostname}
-          netdom computername #{Socket.gethostname} /makeprimary:#{new_resource.hostname}
-          netdom computername #{Socket.gethostname} /remove:#{Socket.gethostname}
-          netdom computername #{Socket.gethostname} /remove:#{Socket.gethostbyname(Socket.gethostname).first}
+        $sysInfo = Get-WmiObject -Class Win32_ComputerSystem
+        $sysInfo.Rename(#{new_resource.hostname})
       EOH
       not_if { Socket.gethostbyname(Socket.gethostname).first == new_resource.hostname }
     end
@@ -123,8 +121,8 @@ action :set do
     # reboot because $windows
     reboot "setting hostname" do
       reason "chef setting hostname"
-      action :reboot_now
-      only_if { new_resource.reboot }
+      action :request_reboot
+      only_if { new_resource.windows_reboot }
     end
   end
 end

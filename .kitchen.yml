@@ -1,6 +1,9 @@
 ---
 driver:
   name: vagrant
+  customize:
+    cpus: 2
+    memory: 2048
 
 provisioner:
   name: chef_zero
@@ -22,6 +25,12 @@ platforms:
   - name: debian-7.9
   - name: debian-6.0.10
   - name: opensuse-13.2
+  - name: windows-2008r2
+    driver_config:
+      box: chef/windows-server-2008r2-standard
+  - name: windows-2012r2
+    driver_config:
+      box: chef/windows-server-2012r2-standard
 
 suites:
   # this tests basic functionality

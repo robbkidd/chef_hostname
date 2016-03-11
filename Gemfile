@@ -3,7 +3,6 @@ source "https://rubygems.org"
 group :rake do
   gem "rake"
   gem "tomlrb"
-  gem "stove"
   gem "github_changelog_generator"
 end
 
@@ -27,4 +26,15 @@ end
 
 group :kitchen_docker do
   gem "kitchen-docker", ">= 2.3"
+end
+
+group :kitchen_cloud do
+  gem 'kitchen-digitalocean'
+  gem 'kitchen-ec2'
+  gem 'kitchen-azurerm'
+end
+
+group :development do
+  gem 'winrm-fs', '~> 0.3'
+  gem 'stove'
 end
