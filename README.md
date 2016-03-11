@@ -24,6 +24,7 @@ Sets the node's hostname
 - RHEL/CentOS/Scientific/Oracle/Fedora/Pidora
 - OpenSUSE/SLES
 - FreeBSD/OpenBSD/NetBSD
+- Docker Containers
 - Windows
 
 ### Chef
