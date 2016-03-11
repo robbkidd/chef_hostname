@@ -13,7 +13,8 @@ Sets the node's hostname
 
 ## Motivation
 
-* Make strong guarantees that `node["fqdn"]` in other recipes "just works" without having to edit them to use `lazy { node["fqdn"] }`
+* Make strong guarantees that `node["fqdn"]` in other recipes "just works"
+* No need to `lazy { node["fqdn"] }`
 * Be very portable
 
 ## Requirements
