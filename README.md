@@ -26,7 +26,7 @@ Sets the node's hostname
 - OpenSUSE/SLES
 - FreeBSD/OpenBSD/NetBSD
 - Docker Containers
-- Windows
+- Windows <-- currently a bit of a lie
 
 ### Chef
 - Chef 12.1+
