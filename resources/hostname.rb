@@ -15,12 +15,18 @@ action_class do
     text.reject! { |s| s =~ regex }
     text += [ string ]
     file path do
+      atomic_update false   # necessary for /etc/hosts on docker
       content text.join("\n") + "\n"
       owner "root"
       group node["root_group"]
       mode "0644"
       not_if { IO.read(path).split("\n").include?(string) }
     end
+  end
+
+  def docker_guest?
+    node["virtualization"] && node["virtualization"]["systems"] &&
+      node["virtualization"]["systems"]["docker"] && node["virtualization"]["systems"]["docker"] == "guest"
   end
 end
 
@@ -49,12 +55,21 @@ action :set do
 
     # setup the hostname to perist on a reboot
     case
-    #when [ "rhel", "fedora" ].include?(node["platform_family"]) && ::File.exist?("/usr/bin/hostnamectl")
-    when node["os"] == "linux" && ::File.exist?("/usr/bin/hostnamectl")
+    when node["os"] == "linux" && ::File.exist?("/usr/bin/hostnamectl") && !docker_guest?
       # use hostnamectl whenever we find it on linux (as systemd takes over the world)
       execute "hostnamectl set-hostname #{new_resource.hostname}" do
         notifies :reload, "ohai[reload hostname]"
         not_if { shell_out!("hostnamectl status").stdout =~ /Static hostname:\s+#{new_resource.hostname}/ }
+      end
+    when node["os"] == "linux" && ::File.exist?("/etc/hostname")
+      # debian family uses /etc/hostname
+      # this is also fallback for any linux systemd host in a docker container
+      file "/etc/hostname" do
+        atomic_update false
+        content "#{new_resource.hostname}\n"
+        owner "root"
+        group node["root_group"]
+        mode "0644"
       end
     when %w{rhel fedora}.include?(node["platform_family"])
       append_replacing_matching_lines("/etc/sysconfig/network", /^HOSTNAME\s+=/, "HOSTNAME=#{new_resource.hostname}")
@@ -62,14 +77,6 @@ action :set do
       append_replacing_matching_lines("/etc/rc.conf", /^\s+hostname\s+=/, "hostname=#{new_resource.hostname}")
 
       file "/etc/myname" do
-        content "#{new_resource.hostname}\n"
-        owner "root"
-        group node["root_group"]
-        mode "0644"
-      end
-    when node["platform_family"] == "debian"
-      # Debian/Ubuntu/Mint/etc use /etc/hostname
-      file "/etc/hostname" do
         content "#{new_resource.hostname}\n"
         owner "root"
         group node["root_group"]
