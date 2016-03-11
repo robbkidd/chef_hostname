@@ -24,3 +24,7 @@ end
 group :kitchen_vagrant do
   gem "kitchen-vagrant", "~> 0.19"
 end
+
+group :kitchen_docker do
+  gem "kitchen-docker"
+end
