@@ -27,14 +27,15 @@ end
 action :set do
   ohai "reload hostname" do
     plugin "hostname"
+    action :nothing
   end
 
   if node["platform_family"] != "windows"
     # set the hostname via /bin/hostname
     execute "set hostname to #{new_resource.hostname}" do
       command "/bin/hostname #{new_resource.hostname}"
-      not_if { shell_out!("hostname").stdout.chomp == name }
-      notifies :reload, "ohai[reload hostname]", :immediately
+      not_if { shell_out!("hostname").stdout.chomp == new_resource.hostname }
+      notifies :reload, "ohai[reload hostname]"
     end
 
     # make sure node['fqdn'] resolves via /etc/hosts
@@ -43,7 +44,7 @@ action :set do
       newline << " #{new_resource.aliases.join(" ")}" if new_resource.aliases && !new_resource.aliases.empty?
       newline << " #{new_resource.hostname[/[^\.]*/]}"
       r = append_replacing_matching_lines("/etc/hosts", /^#{new_resource.ipaddress}\s+|\s+#{new_resource.hostname}\s+/, newline)
-      r.notifies :reload, "ohai[reload hostname]", :immediately
+      r.notifies :reload, "ohai[reload hostname]"
     end
 
     # setup the hostname to perist on a reboot
@@ -52,7 +53,8 @@ action :set do
     when node["os"] == "linux" && ::File.exist?("/usr/bin/hostnamectl")
       # use hostnamectl whenever we find it on linux (as systemd takes over the world)
       execute "hostnamectl set-hostname #{new_resource.hostname}" do
-        notifies :reload, "ohai[reload hostname]", :immediately
+        notifies :reload, "ohai[reload hostname]"
+        not_if { shell_out!("hostnamectl status").stdout =~ /Static hostname:\s+#{new_resource.hostname}/ }
       end
     when %w{rhel fedora}.include?(node["platform_family"])
       append_replacing_matching_lines("/etc/sysconfig/network", /^HOSTNAME\s+=/, "HOSTNAME=#{new_resource.hostname}")
