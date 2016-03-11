@@ -99,7 +99,7 @@ hostname node.name
 end
 ```
 
-Aliases can also be added to the line that hostanme adds to /etc/hosts:
+Aliases can also be added to the line that hostname adds to /etc/hosts:
 
 ```ruby
 hostname node.name
