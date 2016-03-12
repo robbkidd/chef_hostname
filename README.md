@@ -28,6 +28,7 @@ Sets the node's hostname
 - Docker Containers
 - MacOSX
 - Solaris <= 10
+- Gentoo
 - Windows <-- currently a bit of a lie
 
 Because of the way that this cookbook "Duck Types" the operating system, many systems that are not listed above
@@ -134,7 +135,6 @@ Docker container hostnames do not persist after restarts due to limitations of d
 - aix
 - nexus
 - arch
-- gentoo
 
 ## License & Authors
 
