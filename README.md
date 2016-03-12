@@ -27,6 +27,7 @@ Sets the node's hostname
 - FreeBSD/OpenBSD/NetBSD
 - Docker Containers
 - MacOSX
+- Solaris <= 10
 - Windows <-- currently a bit of a lie
 
 ### Chef
