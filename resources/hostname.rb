@@ -15,7 +15,6 @@ action_class do
     text.reject! { |s| s =~ regex }
     text += [ string ]
     file path do
-      atomic_update false   # necessary for /etc/hosts on docker
       content text.join("\n") + "\n"
       owner "root"
       group node["root_group"]
@@ -50,6 +49,7 @@ action :set do
       newline << " #{new_resource.aliases.join(" ")}" if new_resource.aliases && !new_resource.aliases.empty?
       newline << " #{new_resource.hostname[/[^\.]*/]}"
       r = append_replacing_matching_lines("/etc/hosts", /^#{new_resource.ipaddress}\s+|\s+#{new_resource.hostname}\s+/, newline)
+      r.atomic_update false if docker_guest?
       r.notifies :reload, "ohai[reload hostname]"
     end
 
