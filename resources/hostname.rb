@@ -103,6 +103,14 @@ action :set do
           group node["root_group"]
           mode "0644"
         end
+      when ::File.exist?("/etc/conf.d/hostname")
+        # Gentoo
+        file "/etc/conf.d/hostname" do
+          content "#{new_resource.hostname}\n"
+          owner "root"
+          group node["root_group"]
+          mode "0644"
+        end
       else
         # This is a failsafe for all other linux distributions where we set the hostname
         # via /etc/sysctl.conf on reboot.  This may get into a fight with other cookbooks
