@@ -106,7 +106,7 @@ action :set do
       when ::File.exist?("/etc/conf.d/hostname")
         # Gentoo
         file "/etc/conf.d/hostname" do
-          content "#{new_resource.hostname}\n"
+          content "hostname=\"#{new_resource.hostname}\"\n"
           owner "root"
           group node["root_group"]
           mode "0644"
