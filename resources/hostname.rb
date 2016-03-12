@@ -119,6 +119,24 @@ action :set do
         group node["root_group"]
         mode "0644"
       end
+    when ::File.exist?("/etc/nodename")
+      # Solaris <= 5.10 systems prior to svccfg taking over this functionality (must come before svccfg handling)
+      file "/etc/nodename" do
+        content "#{new_resource.hostname}\n"
+        owner "root"
+        group node["root_group"]
+        mode "0644"
+      end
+      # Solaris also has /etc/inet/hosts (copypasta alert)
+      unless new_resource.ipaddress.nil?
+        newline = "#{new_resource.ipaddress} #{new_resource.hostname}"
+        newline << " #{new_resource.aliases.join(" ")}" if new_resource.aliases && !new_resource.aliases.empty?
+        newline << " #{new_resource.hostname[/[^\.]*/]}"
+        r = append_replacing_matching_lines("/etc/inet/hosts", /^#{new_resource.ipaddress}\s+|\s+#{new_resource.hostname}\s+/, newline)
+        r.notifies :reload, "ohai[reload hostname]"
+      end
+    when ::File.exist?("/usr/sbin/svccfg")
+      # Solaris >= 5.11 systems using svccfg (must come after /etc/nodename handling)
     else
       raise "Do not know how to set hostname on os #{node["os"]}, platform #{node["platform"]},"\
         "platform_version #{node["platform_version"]}, platform_family #{node["platform_family"]}"
