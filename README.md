@@ -30,6 +30,9 @@ Sets the node's hostname
 - Solaris <= 10
 - Windows <-- currently a bit of a lie
 
+Because of the way that this cookbook "Duck Types" the operating system, many systems that are not listed above
+have a decent chance of working out of the box provided that they implement a common pattern.
+
 ### Chef
 - Chef 12.1+
 
