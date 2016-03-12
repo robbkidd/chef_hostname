@@ -109,7 +109,7 @@ action :set do
         # that manage sysctls on linux.
         append_replacing_matching_lines("/etc/sysctl.conf", /^\s+kernel\.hostname\s+=/, "kernel.hostname=#{new_resource.hostname}")
       end
-    when %w{freebsd openbsd netbsd}.include?(node["platform_family"])
+    when ::File.exist?("/etc/rc.conf")
       # *BSD systems with /etc/rc.conf + /etc/myname
       append_replacing_matching_lines("/etc/rc.conf", /^\s+hostname\s+=/, "hostname=#{new_resource.hostname}")
 
