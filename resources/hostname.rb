@@ -73,7 +73,7 @@ action :set do
         not_if { shell_out!("/usr/sbin/scutil --get LocalHostName").stdout.chomp == shortname }
         notifies :reload, "ohai[reload hostname]"
       end
-    when node[:os] == "linux"
+    when node['os'] == "linux"
       case
       when ::File.exist?("/usr/bin/hostnamectl") && !docker_guest?
         # use hostnamectl whenever we find it on linux (as systemd takes over the world)
