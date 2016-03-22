@@ -145,6 +145,19 @@ action :set do
       end
     when ::File.exist?("/usr/sbin/svccfg")
       # Solaris >= 5.11 systems using svccfg (must come after /etc/nodename handling)
+      execute "svccfg -s system/identity:node setprop config/nodename=\'#{new_resource.hostname}\'" do
+        notifies :run, 'execute[svcadm refresh]', :immediately
+        notifies :run, 'execute[svcadm restart]', :immediately
+        not_if { shell_out!("svccfg -s system/identity:node listprop config/nodename").stdout.chomp =~ /config\/nodename\s+astring\s+#{new_resource.hostname}/ }
+      end
+      execute "svcadm refresh" do
+        command "svcadm refresh system/identity:node"
+        action :nothing
+      end
+      execute "svcadm restart" do
+        command "svcadm restart system/identity:node"
+        action :nothing
+      end
     else
       raise "Do not know how to set hostname on os #{node["os"]}, platform #{node["platform"]},"\
         "platform_version #{node["platform_version"]}, platform_family #{node["platform_family"]}"
