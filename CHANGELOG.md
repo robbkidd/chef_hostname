@@ -1,11 +1,18 @@
 # Change Log
 
-## [Unreleased](https://github.com/lamont-cookbooks/chef_hostname/tree/HEAD)
-
-[Full Changelog](https://github.com/lamont-cookbooks/chef_hostname/compare/v0.3.0...HEAD)
+## [v0.4.0](https://github.com/lamont-cookbooks/chef_hostname/tree/v0.4.0) (2016-03-22)
+[Full Changelog](https://github.com/lamont-cookbooks/chef_hostname/compare/v0.3.1...v0.4.0)
 
 **Merged pull requests:**
 
+- Support Solaris 11 via svccfg [\#12](https://github.com/lamont-cookbooks/chef_hostname/pull/12) ([lamont-granquist](https://github.com/lamont-granquist))
+
+## [v0.3.1](https://github.com/lamont-cookbooks/chef_hostname/tree/v0.3.1) (2016-03-21)
+[Full Changelog](https://github.com/lamont-cookbooks/chef_hostname/compare/v0.3.0...v0.3.1)
+
+**Merged pull requests:**
+
+- Add Gentoo support [\#10](https://github.com/lamont-cookbooks/chef_hostname/pull/10) ([lamont-granquist](https://github.com/lamont-granquist))
 - Initial work on Solaris 10 [\#9](https://github.com/lamont-cookbooks/chef_hostname/pull/9) ([lamont-granquist](https://github.com/lamont-granquist))
 - Duck type BSD systems better [\#8](https://github.com/lamont-cookbooks/chef_hostname/pull/8) ([lamont-granquist](https://github.com/lamont-granquist))
 - more targetted about atomic updates [\#7](https://github.com/lamont-cookbooks/chef_hostname/pull/7) ([lamont-granquist](https://github.com/lamont-granquist))
