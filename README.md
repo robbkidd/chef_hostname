@@ -118,7 +118,7 @@ Aliases can also be added to the line that hostname adds to /etc/hosts:
 ```ruby
 hostname node.name
   ipaddress "259.1.1.1"
-  aliases [ "klowns.car.local", "britney" ]
+  aliases [ "klowns.car.local", "yolo" ]
 end
 ```
 
