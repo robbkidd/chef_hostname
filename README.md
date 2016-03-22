@@ -27,7 +27,7 @@ Sets the node's hostname
 - FreeBSD/OpenBSD/NetBSD
 - Docker Containers
 - MacOSX
-- Solaris <= 10
+- Solaris
 - Gentoo
 - Windows <-- currently a bit of a lie
 
@@ -131,7 +131,6 @@ Docker container hostnames do not persist after restarts due to limitations of d
 
 ## TODO
 - fix setting node['fqdn'] correctly on windows
-- solaris
 - aix
 - nexus
 - arch
