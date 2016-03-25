@@ -85,7 +85,9 @@ action :set do
       when ::File.exist?("/etc/hostname")
         # debian family uses /etc/hostname
         # arch also uses /etc/hostname
-        # this is also fallback for any linux systemd host in a docker container
+        # the "platform: iox_xr, platform_family: wrlinux, os: linux" platform also hits this
+        # the "platform: nexus, platform_family: wrlinux, os: linux" platform also hits this
+        # this is also fallback for any linux systemd host in a docker container (where /usr/bin/hostnamectl will fail)
         file "/etc/hostname" do
           atomic_update false
           content "#{new_resource.hostname}\n"
