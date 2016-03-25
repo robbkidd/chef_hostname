@@ -84,6 +84,7 @@ action :set do
         end
       when ::File.exist?("/etc/hostname")
         # debian family uses /etc/hostname
+        # arch also uses /etc/hostname
         # this is also fallback for any linux systemd host in a docker container
         file "/etc/hostname" do
           atomic_update false
